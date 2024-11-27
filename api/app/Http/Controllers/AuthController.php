@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class AuthController extends Controller
 {
@@ -24,6 +26,7 @@ class AuthController extends Controller
             $user_data['email'] = $user->email;
             $user_data['phone'] = $user->phone;
             $user_data['photo'] = $user->photo;
+            $user_data['role_id'] = $user->role_id;
             return response()->json($user_data);
         }
         throw ValidationException::withMessages([
@@ -34,9 +37,22 @@ class AuthController extends Controller
      * Summary of logout
      * @return mixed|\Illuminate\Http\JsonResponse
      */
-    final public function logout(): JsonResponse
-    {
-        auth()->user()->tokens()->delete();
-        return response()->json(['msg' => 'You have successfully logged out!']);
-    }
+    // final public function logout(): JsonResponse
+    // {
+    //     auth()->user()->tokens()->delete();
+    //     return response()->json(['msg' => 'You have successfully logged out!']);
+    // }
+    
+
+public function logout(Request $request)
+{
+    // Revoke the user's token (sanctum)
+    $user = Auth::user();
+    $user->tokens->each(function ($token) {
+        $token->delete();  // Delete all user tokens
+    });
+
+    return response()->json(['message' => 'Successfully logged out'], 200);
+}
+
 }
